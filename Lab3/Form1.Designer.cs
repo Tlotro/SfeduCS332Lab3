@@ -42,6 +42,9 @@
             this.Button1 = new System.Windows.Forms.Button();
             this.Button3 = new System.Windows.Forms.Button();
             this.Label4 = new System.Windows.Forms.Label();
+            this.Button4 = new System.Windows.Forms.Button();
+            this.Label5 = new System.Windows.Forms.Label();
+            this.positionTextBox = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // ComboBox
@@ -212,12 +215,49 @@
             this.Label4.Text = "Point Size:";
             this.Label4.Visible = false;
             // 
+            // Button4
+            // 
+            this.Button4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Button4.Enabled = false;
+            this.Button4.Location = new System.Drawing.Point(688, 146);
+            this.Button4.Name = "Button4";
+            this.Button4.Size = new System.Drawing.Size(100, 23);
+            this.Button4.TabIndex = 11;
+            this.Button4.Text = "Move";
+            this.Button4.UseVisualStyleBackColor = true;
+            this.Button4.Visible = false;
+            this.Button4.Click += new System.EventHandler(this.Button4_Click);
+            // 
+            // Label5
+            // 
+            this.Label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.Label5.AutoSize = true;
+            this.Label5.Enabled = false;
+            this.Label5.Location = new System.Drawing.Point(621, 151);
+            this.Label5.Name = "Label5";
+            this.Label5.Size = new System.Drawing.Size(57, 13);
+            this.Label5.TabIndex = 12;
+            this.Label5.Text = "Point Size:";
+            this.Label5.Visible = false;
+            // 
+            // positionTextBox
+            // 
+            this.positionTextBox.Enabled = false;
+            this.positionTextBox.Location = new System.Drawing.Point(13, 12);
+            this.positionTextBox.Name = "positionTextBox";
+            this.positionTextBox.Size = new System.Drawing.Size(185, 20);
+            this.positionTextBox.TabIndex = 13;
+            this.positionTextBox.Visible = false;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.positionTextBox);
+            this.Controls.Add(this.Label5);
             this.Controls.Add(this.Label4);
+            this.Controls.Add(this.Button4);
             this.Controls.Add(this.Button3);
             this.Controls.Add(this.Button1);
             this.Controls.Add(this.Button2);
@@ -234,6 +274,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form1";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDoubleClick);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseDown);
             this.MouseUp += new System.Windows.Forms.MouseEventHandler(this.Form1_MouseUp);
             this.ResumeLayout(false);
@@ -257,6 +298,9 @@
         private System.Windows.Forms.Button Button1;
         private System.Windows.Forms.Button Button3;
         private System.Windows.Forms.Label Label4;
+        private System.Windows.Forms.Button Button4;
+        private System.Windows.Forms.Label Label5;
+        private System.Windows.Forms.TextBox positionTextBox;
     }
 }
 

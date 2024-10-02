@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -17,8 +18,8 @@ namespace Lab3
     public partial class Form1 : Form
     {
         public List<Polygon> polygons = new List<Polygon>();
-        Polygon currentPoligon;
-        PointWrapper currentPoint;
+        List<Polygon> currentPoligons = new List<Polygon>();
+        List<PointWrapper> currentPoints = new List<PointWrapper>();
         int flag;
         Graphics g;
         public Form1()
@@ -33,29 +34,29 @@ namespace Lab3
             {
                 //Код для постройки полигона
                 case 0:
-                    if (e.Button == MouseButtons.Right && currentPoligon != null)
+                    if (e.Button == MouseButtons.Right && currentPoligons.Count() != 0)
                     {
-                        polygons.Add(currentPoligon);
+                        polygons.Add(currentPoligons[0]);
                         UpdateDraw();
-                        currentPoligon = null;
+                        currentPoligons.RemoveAt(0);
                         Form1.ActiveForm.MouseMove -= DrawPolygon;
                     }
                     else if (e.Button == MouseButtons.Left)
                     {
-                        if (currentPoligon != null)
+                        if (currentPoligons.Count() != 0)
                         {
-                            currentPoligon.points.Add(new PointWrapper(PointToClient(Cursor.Position)));
+                            currentPoligons[0].points.Add(new PointWrapper(PointToClient(Cursor.Position)));
                         }
-                        if (currentPoligon == null)
+                        if (currentPoligons.Count() == 0)
                         {
                             int W,D;
                             if (!int.TryParse(textBox2.Text, out W))
                                 W = 1;
                             if (!int.TryParse(textBox3.Text, out D))
                                 D = 5;
-                            currentPoligon = new Polygon(ColorDialog.Color,W,D);
+                            currentPoligons.Add(new Polygon(ColorDialog.Color,W,D));
                             Form1.ActiveForm.MouseMove += DrawPolygon;
-                            currentPoligon.points.Add(new PointWrapper(PointToClient(Cursor.Position)));
+                            currentPoligons[0].points.Add(new PointWrapper(PointToClient(Cursor.Position)));
                         }
                     } 
                 break;
@@ -63,9 +64,9 @@ namespace Lab3
                 case 1:
                     if (e.Button == MouseButtons.Left)
                     {
-                        if (currentPoint != null)
+                        if (currentPoints.Count() != 0)
                         {
-                            currentPoint = null;
+                            currentPoints.RemoveAt(0);
                             Form1.ActiveForm.MouseMove -= PointMove;
                         }
                     }
@@ -101,30 +102,18 @@ namespace Lab3
                     {
                         if (flag == 1)
                         {
-                            foreach (Polygon poly in polygons)
-                            {
-                                foreach (PointWrapper point in poly.points)
-                                {
-                                    Point cursorpoint = PointToClient(Cursor.Position);
-                                    if (Math.Sqrt(Math.Pow(cursorpoint.X - point.X, 2) + Math.Pow(cursorpoint.Y - point.Y, 2)) < Math.Max(poly.pointDiam, 8) / 2)
-                                    {
-                                        currentPoligon = poly;
-                                        break;
-                                    }
-                                }
-                                if (currentPoligon != null)
-                                    break;
-                            }
-                            if (currentPoligon != null)
+                            currentPoligons.Clear();
+                            SelectPolygon();
+                            if (currentPoligons.Count() != 0)
                             {
                                 float X = 0, Y = 0;
-                                foreach (PointWrapper point in currentPoligon.points)
+                                foreach (PointWrapper point in currentPoligons[0].points)
                                 {
                                     X += point.X;
                                     Y += point.Y;
                                 }
-                                X /= currentPoligon.points.Count();
-                                Y /= currentPoligon.points.Count();
+                                X /= currentPoligons[0].points.Count();
+                                Y /= currentPoligons[0].points.Count();
                                 Label4.Text = X + " " + Y;
                                 Button2.Enabled = true;
                                 flag = 0;
@@ -138,43 +127,115 @@ namespace Lab3
                     {
                         if (flag == 1)
                         {
-                            foreach (Polygon poly in polygons)
-                            {
-                                foreach (PointWrapper point in poly.points)
-                                {
-                                    Point cursorpoint = PointToClient(Cursor.Position);
-                                    if (Math.Sqrt(Math.Pow(cursorpoint.X - point.X, 2) + Math.Pow(cursorpoint.Y - point.Y, 2)) < Math.Max(poly.pointDiam, 8) / 2)
-                                    {
-                                        currentPoligon = poly;
-                                        break;
-                                    }
-                                }
-                                if (currentPoligon != null)
-                                    break;
-                            }
-                            if (currentPoligon != null)
+                            currentPoligons.Clear();
+                            SelectPolygon();
+                            if (currentPoligons.Count() != 0)
                             {
                                 float X = 0, Y = 0;
-                                foreach (PointWrapper point in currentPoligon.points)
+                                foreach (PointWrapper point in currentPoligons[0].points)
                                 {
                                     X += point.X;
                                     Y += point.Y;
                                 }
-                                X /= currentPoligon.points.Count();
-                                Y /= currentPoligon.points.Count();
+                                X /= currentPoligons[0].points.Count();
+                                Y /= currentPoligons[0].points.Count();
                                 Label3.Text = X + " " + Y;
-                                if (currentPoint != null)
+                                if (currentPoints.Count() != 0)
                                     Button1.Enabled = true;
                                 flag = 0;
                             }
                         } else if (flag == 2)
                         {
-                            currentPoint = new PointWrapper(PointToClient(Cursor.Position));
-                            Label4.Text = currentPoint.X + " " + currentPoint.Y;
-                            if (currentPoligon != null)
+                            currentPoints.Clear();
+                            currentPoints.Add(new PointWrapper(PointToClient(Cursor.Position)));
+                            Label4.Text = currentPoints[0].X + " " + currentPoints[0].Y;
+                            if (currentPoligons.Count() != 0)
                                 Button1.Enabled = true;
                             flag = 0;
                             Form1.ActiveForm.MouseMove -= DrawExtraPoint;
+                        }
+                    }
+                    break;
+                case 5:
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        if (flag == 1)
+                        {
+                            currentPoligons.Clear();
+                            SelectPolygon();
+                            if (currentPoligons.Count() != 0)
+                            {
+                                float X = 0, Y = 0;
+                                foreach (PointWrapper point in currentPoligons[0].points)
+                                {
+                                    X += point.X;
+                                    Y += point.Y;
+                                }
+                                X /= currentPoligons[0].points.Count();
+                                Y /= currentPoligons[0].points.Count();
+                                Label3.Text = X + " " + Y;
+                                Button1.Enabled = true;
+                                flag = 0;
+                            }
+                        }
+                    }
+                    break;
+                case 6:
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        if (flag == 1)
+                        {
+                            currentPoligons.Clear();
+                            SelectPolygon();
+                            if (currentPoligons.Count() != 0)
+                            {
+                                float X = 0, Y = 0;
+                                foreach (PointWrapper point in currentPoligons[0].points)
+                                {
+                                    X += point.X;
+                                    Y += point.Y;
+                                }
+                                X /= currentPoligons[0].points.Count();
+                                Y /= currentPoligons[0].points.Count();
+                                Label4.Text = X + " " + Y;
+                                if (currentPoints.Count() != 0)
+                                    Button2.Enabled = true;
+                                flag = 0;
+                            }
+                        }
+                        else if (flag == 2)
+                        {
+                            currentPoints.Clear();
+                            currentPoints.Add(new PointWrapper(PointToClient(Cursor.Position)));
+                            Label5.Text = currentPoints[0].X + " " + currentPoints[0].Y;
+                            if (currentPoligons.Count() != 0)
+                                Button2.Enabled = true;
+                            flag = 0;
+                            Form1.ActiveForm.MouseMove -= DrawExtraPoint;
+                        }
+                    }
+                    break;
+                case 7:
+                    if (e.Button == MouseButtons.Left)
+                    {
+                        if (flag == 1)
+                        {
+                            currentPoligons.Clear();
+                            SelectPolygon();
+                            if (currentPoligons.Count() != 0)
+                            {
+                                float X = 0, Y = 0;
+                                foreach (PointWrapper point in currentPoligons[0].points)
+                                {
+                                    X += point.X;
+                                    Y += point.Y;
+                                }
+                                X /= currentPoligons[0].points.Count();
+                                Y /= currentPoligons[0].points.Count();
+                                Label4.Text = X + " " + Y;
+                                Button2.Enabled = true;
+                                flag = 0;
+                            }
                         }
                     }
                     break;
@@ -188,7 +249,7 @@ namespace Lab3
                 case 1:
                     if (e.Button == MouseButtons.Left)
                     {
-                        if (currentPoint == null)
+                        if (currentPoints.Count() == 0)
                         {
                             foreach (Polygon poly in polygons)
                             {
@@ -197,12 +258,12 @@ namespace Lab3
                                     Point cursorpoint = PointToClient(Cursor.Position);
                                     if (Math.Sqrt(Math.Pow(cursorpoint.X - point.X, 2) + Math.Pow(cursorpoint.Y - point.Y, 2)) < Math.Max(poly.pointDiam,8) / 2)
                                     {
-                                        currentPoint = point;
+                                        currentPoints.Add(point);
                                         Form1.ActiveForm.MouseMove += PointMove;
                                         break;
                                     }
                                 }
-                                if (currentPoint != null)
+                                if (currentPoints.Count() != 0)
                                     break;
                             }
                         }
@@ -213,15 +274,15 @@ namespace Lab3
         private void PointMove(object sender, MouseEventArgs e)
         {
             Point cursorpoint = PointToClient(Cursor.Position);
-            currentPoint.X = cursorpoint.X;
-            currentPoint.Y = cursorpoint.Y;
+            currentPoints[0].X = cursorpoint.X;
+            currentPoints[0].Y = cursorpoint.Y;
             UpdateDraw();
         }
 
         private void DrawPolygon(object sender, MouseEventArgs e)
         {
             UpdateDraw();
-            currentPoligon.DrawIncomplete(g, PointToClient(Cursor.Position));
+            currentPoligons[0].DrawIncomplete(g, PointToClient(Cursor.Position));
         }
 
         private void DrawExtraPoint(object sender, MouseEventArgs e)
@@ -252,8 +313,8 @@ namespace Lab3
             Form1.ActiveForm.MouseMove -= DrawPolygon;
             Form1.ActiveForm.MouseMove -= DrawExtraPoint;
             UpdateDraw();
-            currentPoligon = null;
-            currentPoint = null;
+            currentPoligons.Clear();
+            currentPoints.Clear();
             ColorButton.Visible = false;
             ColorButton.Enabled = false;
             textBox1.Visible = false;
@@ -298,7 +359,6 @@ namespace Lab3
                     Label2.Text = "Line Width:";
                     Label3.Text = "Point Size:";
                     break;
-
                 case 3:
                     textBox1.Visible = true;
                     textBox1.Enabled = true;
@@ -368,6 +428,32 @@ namespace Lab3
                     Label2.Enabled = true;
                     Label4.Visible = true;
                     Label4.Enabled = true;
+                    Label5.Visible = true;
+                    Label5.Enabled = true;
+                    Button2.Visible = true;
+                    Button3.Visible = true;
+                    Button3.Enabled = true;
+                    Button4.Visible = true;
+                    Button4.Enabled = true;
+                    Label1.Text = "X:";
+                    Label2.Text = "Y:";
+                    Label4.Text = "None";
+                    Label5.Text = "None";
+                    Button2.Text = "Scale";
+                    Button3.Text = "Set Polygon";
+                    Button4.Text = "Set Point";
+                    break;
+                case 7:
+                    textBox1.Visible = true;
+                    textBox1.Enabled = true;
+                    textBox2.Visible = true;
+                    textBox2.Enabled = true;
+                    Label1.Visible = true;
+                    Label1.Enabled = true;
+                    Label2.Visible = true;
+                    Label2.Enabled = true;
+                    Label4.Visible = true;
+                    Label4.Enabled = true;
                     Button2.Visible = true;
                     Button3.Visible = true;
                     Button3.Enabled = true;
@@ -376,6 +462,8 @@ namespace Lab3
                     Label4.Text = "None";
                     Button2.Text = "Scale";
                     Button3.Text = "Set Polygon";
+                    break;
+                case 10:
                     break;
             }
         }
@@ -386,58 +474,75 @@ namespace Lab3
             ColorButton.BackColor = ColorDialog.Color;
             ColorButton.FlatAppearance.BorderColor = ColorDialog.Color;
         }
-
-
         private void Button1_Click(object sender, EventArgs e)
         {
+            float n;
             switch (ComboBox.SelectedIndex)
             {
                 case 4:
-                    float deg;
-                    if (currentPoligon != null && float.TryParse(textBox1.Text, out deg))
+                    if (currentPoligons.Count() != 0 && float.TryParse(textBox1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out n))
                     {
-                        foreach (PointWrapper point in currentPoligon.points)
+                        foreach (PointWrapper point in currentPoligons[0].points)
                         {
-                            float Xt = point.X-currentPoint.X, Yt = point.Y-currentPoint.Y;
-                            point.X = (float)(Xt * Math.Cos(deg*Math.PI/180)- Yt * Math.Sin(deg * Math.PI / 180)) + currentPoint.X; 
-                            point.Y = (float)(Xt * Math.Sin(deg * Math.PI / 180) + Yt * Math.Cos(deg * Math.PI / 180)) + currentPoint.Y;
+                            float Xt = point.X - currentPoints[0].X, Yt = point.Y - currentPoints[0].Y;
+                            point.X = (float)(Xt * Math.Cos(n*Math.PI/180)- Yt * Math.Sin(n * Math.PI / 180)) + currentPoints[0].X; 
+                            point.Y = (float)(Xt * Math.Sin(n * Math.PI / 180) + Yt * Math.Cos(n * Math.PI / 180)) + currentPoints[0].Y;
                         }
                         float X = 0, Y = 0;
-                        foreach (PointWrapper point in currentPoligon.points)
+                        foreach (PointWrapper point in currentPoligons[0].points)
                         {
                             X += point.X;
                             Y += point.Y;
                         }
-                        X /= currentPoligon.points.Count();
-                        Y /= currentPoligon.points.Count();
+                        X /= currentPoligons[0].points.Count();
+                        Y /= currentPoligons[0].points.Count();
                         Label3.Text = X + " " + Y;
                         UpdateDraw();
-                        g.FillEllipse(new Pen(Color.Green).Brush, currentPoint.X - 6 / 2, currentPoint.Y - 6 / 2, 6, 6);
+                        g.FillEllipse(new Pen(Color.Green).Brush, currentPoints[0].X - 6 / 2, currentPoints[0].Y - 6 / 2, 6, 6);
+                    }
+                    break;
+                case 5:
+                    if (currentPoligons.Count() != 0 && float.TryParse(textBox1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out n))
+                    {
+                        float X = 0, Y = 0;
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            X += point.X;
+                            Y += point.Y;
+                        }
+                        X /= currentPoligons[0].points.Count();
+                        Y /= currentPoligons[0].points.Count();
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            float Xt = point.X - X, Yt = point.Y - Y;
+                            point.X = (float)(Xt * Math.Cos(n * Math.PI / 180) - Yt * Math.Sin(n * Math.PI / 180)) + X;
+                            point.Y = (float)(Xt * Math.Sin(n * Math.PI / 180) + Yt * Math.Cos(n * Math.PI / 180)) + Y;
+                        }
+                        UpdateDraw();
                     }
                     break;
             }
         }
-
         private void Button2_Click(object sender, EventArgs e)
         {
+            float X; float Y;
             switch (ComboBox.SelectedIndex)
             {
                 //Код для перемещения полигона
                 case 3:
-                    float X; float Y;
-                    if (currentPoligon != null && float.TryParse(textBox1.Text,out X) && float.TryParse(textBox2.Text, out Y))
+                    if (currentPoligons.Count() != 0 && float.TryParse(textBox1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out X) && float.TryParse(textBox2.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out Y))
                     {
-                        foreach (PointWrapper point in currentPoligon.points)
+                        foreach (PointWrapper point in currentPoligons[0].points)
                         {
                             point.X += X; point.Y += Y;
                         }
-                        foreach (PointWrapper point in currentPoligon.points)
+                        foreach (PointWrapper point in currentPoligons[0].points)
                         {
                             X += point.X;
                             Y += point.Y;
                         }
-                        X /= currentPoligon.points.Count();
-                        Y /= currentPoligon.points.Count();
+                        X /= currentPoligons[0].points.Count();
+                        Y /= currentPoligons[0].points.Count();
                         Label4.Text = X + " " + Y;
                         UpdateDraw();
                     }
@@ -445,7 +550,55 @@ namespace Lab3
                 case 4:
                     flag = 1;
                     Button1.Enabled = false;
-                    currentPoligon = null;
+                    currentPoligons.Clear();
+                    break;
+                case 5:
+                    flag = 1;
+                    Button1.Enabled = false;
+                    currentPoligons.Clear();
+                    break;
+                case 6:
+                    if (currentPoligons.Count() != 0 && float.TryParse(textBox1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out X) && float.TryParse(textBox2.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out Y))
+                    {
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            float Xt = point.X - currentPoints[0].X, Yt = point.Y - currentPoints[0].Y;
+                            point.X = (float)(Xt * X) + currentPoints[0].X;
+                            point.Y = (float)(Yt * Y)+ currentPoints[0].Y;
+                        }
+                        X = 0; Y = 0;
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            X += point.X;
+                            Y += point.Y;
+                        }
+                        X /= currentPoligons[0].points.Count();
+                        Y /= currentPoligons[0].points.Count();
+                        Label3.Text = X + " " + Y;
+                        UpdateDraw();
+                        g.FillEllipse(new Pen(Color.Green).Brush, currentPoints[0].X - 6 / 2, currentPoints[0].Y - 6 / 2, 6, 6);
+                    }
+                    break;
+                case 7:
+                    if (currentPoligons.Count() != 0 && float.TryParse(textBox1.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out X) && float.TryParse(textBox2.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out Y))
+                    {
+                        float Xc = 0, Yc = 0;
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            Xc += point.X;
+                            Yc += point.Y;
+                        }
+                        Xc /= currentPoligons[0].points.Count();
+                        Yc /= currentPoligons[0].points.Count();
+                        foreach (PointWrapper point in currentPoligons[0].points)
+                        {
+                            float Xt = point.X - Xc, Yt = point.Y - Yc;
+                            point.X = (float)(Xt * X) + Xc;
+                            point.Y = (float)(Yt * Y) + Yc;
+                        }
+                        Label3.Text = X + " " + Y;
+                        UpdateDraw();
+                    }
                     break;
             }
         }
@@ -456,16 +609,124 @@ namespace Lab3
                 case 3:
                     flag = 1;
                     Button2.Enabled = false;
-                    currentPoligon = null;
+                    currentPoligons.Clear();
                     break;
                 case 4:
                     flag = 2;
                     Button1.Enabled = false;
-                    currentPoint = null;
+                    currentPoints.Clear();
+                    Form1.ActiveForm.MouseMove += DrawExtraPoint;
+                    break;
+                case 6:
+                    flag = 1;
+                    Button2.Enabled = false;
+                    currentPoligons.Clear();
+                    break;
+                case 7:
+                    flag = 1;
+                    Button2.Enabled = false;
+                    currentPoligons.Clear();
+                    break;
+            }
+        }
+        private void Button4_Click(object sender, EventArgs e)
+        {
+            switch (ComboBox.SelectedIndex)
+            {
+                case 6:
+                    flag = 2;
+                    Button2.Enabled = false;
+                    currentPoints.Clear();
                     Form1.ActiveForm.MouseMove += DrawExtraPoint;
                     break;
             }
         }
+        private void SelectPolygon()
+        {
+            foreach (Polygon poly in polygons)
+            {
+                foreach (PointWrapper point in poly.points)
+                {
+                    Point cursorpoint = PointToClient(Cursor.Position);
+                    if (Math.Sqrt(Math.Pow(cursorpoint.X - point.X, 2) + Math.Pow(cursorpoint.Y - point.Y, 2)) < Math.Max(poly.pointDiam, 8) / 2)
+                    {
+                        currentPoligons.Add(poly);
+                        break;
+                    }
+                }
+                if (currentPoligons.Count() != 0)
+                    break;
+            }
+        }
+        // Определение положения точки относительно ребер
+        private void Form1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (ComboBox.SelectedIndex == 10) // Проверяем, выбран ли пункт "Position Relative to Segment"
+            {
+                positionTextBox.Visible = true;
+                positionTextBox.Enabled = true;
+                positionTextBox.AutoSize = true;
+                positionTextBox.Multiline = true;
+                positionTextBox.ScrollBars = ScrollBars.Vertical;
+
+                Point doubleClickPoint = PointToClient(Cursor.Position);
+                string positionInfo = "";
+
+                foreach (Polygon polygon in polygons)
+                {
+                    for (int i = 0; i < polygon.points.Count; i++)
+                    {
+                        PointF edgeStart, edgeEnd;
+
+                        if (i == polygon.points.Count - 1)
+                        {
+                            // Соединение последней точки с первой
+                            edgeStart = polygon.points[i].point;
+                            edgeEnd = polygon.points[0].point;
+                        }
+                        else
+                        {
+                            edgeStart = polygon.points[i].point;
+                            edgeEnd = polygon.points[i + 1].point;
+                        }
+
+                        int position = ClassifyPointToEdge(edgeStart, edgeEnd, doubleClickPoint);
+                        string positionText = position == 1 ? "слева" : (position == -1 ? "справа" : "на ребре");
+                        positionInfo += $"Точка находится {positionText} от {i + 1} ребра {polygons.IndexOf(polygon) + 1} полигона\r\n";
+                    }
+                }
+
+                positionTextBox.Text = positionInfo;
+
+                // Изменение размера текстового поля в зависимости от размера текста
+                using (Graphics g = CreateGraphics())
+                {
+                    SizeF textSize = g.MeasureString(positionInfo, positionTextBox.Font, positionTextBox.Width);
+                    positionTextBox.Height = (int)textSize.Height;
+                }
+
+                //UpdateDraw();
+                //g.FillEllipse(new Pen(Color.Green).Brush, doubleClickPoint.X - 6 / 2, doubleClickPoint.Y - 6 / 2, 6, 6);
+            }
+        }
+
+        public static int ClassifyPointToEdge(PointF edgeStart, PointF edgeEnd, PointF point)
+        {
+            float xa = edgeStart.X - edgeEnd.X;
+            float ya = edgeStart.Y - edgeEnd.Y;
+            float xb = point.X - edgeStart.X;
+            float yb = point.Y - edgeStart.Y;
+
+            float crossProduct = yb * xa - xb * ya;
+
+            if (crossProduct > 0)
+                return 1; // Точка слева от ребра
+            else if (crossProduct < 0)
+                return -1; // Точка справа от ребра
+            else
+                return 0; // Точка на ребре
+        }
+
     }
     public class Polygon
     {
