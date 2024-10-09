@@ -17,6 +17,9 @@ namespace Lab3
 
     public partial class Form1 : Form
     {
+        private int clickCount = 0;
+        private PointF[] selectedPoints = new PointF[2];
+        private PointF[] drawnLine = new PointF[2];
         public List<Polygon> polygons = new List<Polygon>();
         List<Polygon> currentPoligons = new List<Polygon>();
         List<PointWrapper> currentPoints = new List<PointWrapper>();
@@ -238,6 +241,42 @@ namespace Lab3
                             }
                         }
                     }
+                    break;
+                case 8:
+                    if (clickCount < 2)
+                    {
+                        // Первые два нажатия: выбираем две точки в полигоне
+                        SelectPointsInPolygon(e.Location);
+                    }
+                    else if (clickCount < 4)
+                    {
+                        // Следующие два нажатия: рисуем новую линию
+                        DrawNewLine(e.Location);
+                    }
+
+                    clickCount++;
+
+                    if (clickCount == 4)
+                    {
+                        // Проверяем пересечение и выводим результат
+                        CheckIntersectionAndClear();
+                        clickCount = 0; // Сбрасываем счетчик кликов
+                    }
+                    break;
+                case 9:
+                    Point clickPoint = PointToClient(Cursor.Position);
+                    bool isInside = false;
+
+                    foreach (Polygon polygon in polygons)
+                    {
+                        if (IsPointInPolygon(clickPoint, polygon))
+                        {
+                            isInside = true;
+                            break;
+                        }
+                    }
+
+                    MessageBox.Show(isInside ? "Точка находится внутри полигона" : "Точка находится вне полигона");
                     break;
             }
         }
@@ -726,6 +765,131 @@ namespace Lab3
             else
                 return 0; // Точка на ребре
         }
+        private void SelectPointsInPolygon(PointF clickPoint)
+        {
+            foreach (Polygon polygon in polygons)
+            {
+                for (int i = 0; i < polygon.points.Count; i++)
+                {
+                    PointF point = polygon.points[i].point;
+
+                    if (IsPointCloseToClick(clickPoint, point))
+                    {
+                        if (clickCount == 0)
+                        {
+                            selectedPoints[0] = point;
+                        }
+                        else if (clickCount == 1)
+                        {
+                            selectedPoints[1] = point;
+                            if (!ArePointsConnected(polygon, selectedPoints[0], selectedPoints[1]))
+                            {
+                                MessageBox.Show("Выбранные точки не соединены линией в полигоне.");
+                                clickCount = 0; // Сбрасываем счетчик кликов
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        private bool ArePointsConnected(Polygon polygon, PointF p1, PointF p2)
+        {
+            for (int i = 0; i < polygon.points.Count - 1; i++)
+            {
+                if ((polygon.points[i].point == p1 && polygon.points[i + 1].point == p2) ||
+                    (polygon.points[i].point == p2 && polygon.points[i + 1].point == p1))
+                {
+                    return true;
+                }
+            }
+
+            // Проверяем последнюю линию, соединяющую последнюю и первую точки
+            if ((polygon.points.Last().point == p1 && polygon.points.First().point == p2) ||
+                (polygon.points.Last().point == p2 && polygon.points.First().point == p1))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void DrawNewLine(PointF clickPoint)
+        {
+            if (clickCount == 2)
+            {
+                drawnLine[0] = clickPoint;
+            }
+            else if (clickCount == 3)
+            {
+                drawnLine[1] = clickPoint;
+            }
+        }
+
+        private void CheckIntersectionAndClear()
+        {
+            PointF? intersectionPoint = FindIntersection(selectedPoints[0], selectedPoints[1], drawnLine[0], drawnLine[1]);
+            if (intersectionPoint.HasValue)
+            {
+                MessageBox.Show($"Линии пересекаются в точке: ({intersectionPoint.Value.X}, {intersectionPoint.Value.Y})");
+            }
+            else
+            {
+                MessageBox.Show("Линии не пересекаются");
+            }
+
+            // Очищаем нарисованную линию
+            drawnLine[0] = new PointF();
+            drawnLine[1] = new PointF();
+        }
+
+        private bool IsPointCloseToClick(PointF clickPoint, PointF point)
+        {
+            float epsilon = 5.0f; // Допустимая погрешность
+            return Math.Abs(clickPoint.X - point.X) < epsilon && Math.Abs(clickPoint.Y - point.Y) < epsilon;
+        }
+
+        private PointF? FindIntersection(PointF p1, PointF p2, PointF p3, PointF p4)
+        {
+            float denominator = (p4.Y - p3.Y) * (p2.X - p1.X) - (p4.X - p3.X) * (p2.Y - p1.Y);
+
+            if (denominator == 0)
+            {
+                return null; // Линии параллельны
+            }
+
+            float ua = ((p4.X - p3.X) * (p1.Y - p3.Y) - (p4.Y - p3.Y) * (p1.X - p3.X)) / denominator;
+            float ub = ((p2.X - p1.X) * (p1.Y - p3.Y) - (p2.Y - p1.Y) * (p1.X - p3.X)) / denominator;
+
+            if (ua >= 0 && ua <= 1 && ub >= 0 && ub <= 1)
+            {
+                // Линии пересекаются
+                float x = p1.X + ua * (p2.X - p1.X);
+                float y = p1.Y + ua * (p2.Y - p1.Y);
+                return new PointF(x, y);
+            }
+
+            return null; // Линии не пересекаются
+        }
+
+        private bool IsPointInPolygon(Point point, Polygon polygon)
+        {
+            int i, j;
+            bool c = false;
+            int nvert = polygon.points.Count;
+
+            for (i = 0, j = nvert - 1; i < nvert; j = i++)
+            {
+                if (((polygon.points[i].Y > point.Y) != (polygon.points[j].Y > point.Y)) &&
+                    (point.X < (polygon.points[j].X - polygon.points[i].X) * (point.Y - polygon.points[i].Y) / (polygon.points[j].Y - polygon.points[i].Y) + polygon.points[i].X))
+                {
+                    c = !c;
+                }
+            }
+
+            return c;
+        }
 
     }
     public class Polygon
@@ -752,6 +916,8 @@ namespace Lab3
             {
                 point = new Point(X, Y);
             }
+
+
         }
         public List<PointWrapper> points;
         public Color color;
