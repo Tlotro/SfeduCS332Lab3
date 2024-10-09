@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -370,12 +371,16 @@ namespace Lab3
             Label3.Enabled = false;
             Label4.Visible = false;
             Label4.Enabled = false;
+            Label5.Visible = false;
+            Label5.Enabled = false;
             Button1.Visible = false;
             Button1.Enabled = false;
             Button2.Visible = false;
             Button2.Enabled = false;
             Button3.Visible = false;
             Button3.Enabled = false;
+            Button4.Visible = false;
+            Button4.Enabled = false;
             textBox1.Text = "";
             textBox2.Text = "";
             textBox3.Text = "";
@@ -523,9 +528,14 @@ namespace Lab3
                     {
                         foreach (PointWrapper point in currentPoligons[0].points)
                         {
-                            float Xt = point.X - currentPoints[0].X, Yt = point.Y - currentPoints[0].Y;
-                            point.X = (float)(Xt * Math.Cos(n*Math.PI/180)- Yt * Math.Sin(n * Math.PI / 180)) + currentPoints[0].X; 
-                            point.Y = (float)(Xt * Math.Sin(n * Math.PI / 180) + Yt * Math.Cos(n * Math.PI / 180)) + currentPoints[0].Y;
+                            Matr m = new Matr(point.point);
+                            Matr oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, -currentPoints[0].X, -currentPoints[0].Y, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, (float)Math.Cos(n * Math.PI / 180), (float)Math.Sin(n * Math.PI / 180), 0, -(float)Math.Sin(n * Math.PI / 180), (float)Math.Cos(n * Math.PI / 180), 0, 0, 0, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, currentPoints[0].X, currentPoints[0].Y, 1);
+                            m = m * oper;
+                            point.point = m.ToPoint();
                         }
                         float X = 0, Y = 0;
                         foreach (PointWrapper point in currentPoligons[0].points)
@@ -553,9 +563,14 @@ namespace Lab3
                         Y /= currentPoligons[0].points.Count();
                         foreach (PointWrapper point in currentPoligons[0].points)
                         {
-                            float Xt = point.X - X, Yt = point.Y - Y;
-                            point.X = (float)(Xt * Math.Cos(n * Math.PI / 180) - Yt * Math.Sin(n * Math.PI / 180)) + X;
-                            point.Y = (float)(Xt * Math.Sin(n * Math.PI / 180) + Yt * Math.Cos(n * Math.PI / 180)) + Y;
+                            Matr m = new Matr(point.point);
+                            Matr oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, -X, -Y, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, (float)Math.Cos(n * Math.PI / 180), (float)Math.Sin(n * Math.PI / 180), 0, -(float)Math.Sin(n * Math.PI / 180), (float)Math.Cos(n * Math.PI / 180), 0, 0, 0, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, X, Y, 1);
+                            m = m * oper;
+                            point.point = m.ToPoint();
                         }
                         UpdateDraw();
                     }
@@ -573,6 +588,10 @@ namespace Lab3
                     {
                         foreach (PointWrapper point in currentPoligons[0].points)
                         {
+                            Matr m = new Matr(point.point);
+                            Matr oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, X, Y, 1);
+                            m = m * oper;
+                            point.point = m.ToPoint();
                             point.X += X; point.Y += Y;
                         }
                         foreach (PointWrapper point in currentPoligons[0].points)
@@ -601,9 +620,14 @@ namespace Lab3
                     {
                         foreach (PointWrapper point in currentPoligons[0].points)
                         {
-                            float Xt = point.X - currentPoints[0].X, Yt = point.Y - currentPoints[0].Y;
-                            point.X = (float)(Xt * X) + currentPoints[0].X;
-                            point.Y = (float)(Yt * Y)+ currentPoints[0].Y;
+                            Matr m = new Matr(point.point);
+                            Matr oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, -currentPoints[0].X, -currentPoints[0].Y, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, X, 0, 0, 0, Y, 0, 0, 0, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, currentPoints[0].X, currentPoints[0].Y, 1);
+                            m = m * oper;
+                            point.point = m.ToPoint();
                         }
                         X = 0; Y = 0;
                         foreach (PointWrapper point in currentPoligons[0].points)
@@ -631,11 +655,15 @@ namespace Lab3
                         Yc /= currentPoligons[0].points.Count();
                         foreach (PointWrapper point in currentPoligons[0].points)
                         {
-                            float Xt = point.X - Xc, Yt = point.Y - Yc;
-                            point.X = (float)(Xt * X) + Xc;
-                            point.Y = (float)(Yt * Y) + Yc;
+                            Matr m = new Matr(point.point);
+                            Matr oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, -Xc, -Yc, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, X, 0, 0, 0, Y, 0, 0, 0, 1);
+                            m = m * oper;
+                            oper = new Matr(3, 3, 1, 0, 0, 0, 1, 0, Xc, Yc, 1);
+                            m = m * oper;
+                            point.point = m.ToPoint();
                         }
-                        Label3.Text = X + " " + Y;
                         UpdateDraw();
                     }
                     break;
@@ -832,7 +860,8 @@ namespace Lab3
             PointF? intersectionPoint = FindIntersection(selectedPoints[0], selectedPoints[1], drawnLine[0], drawnLine[1]);
             if (intersectionPoint.HasValue)
             {
-                MessageBox.Show($"Линии пересекаются в точке: ({intersectionPoint.Value.X}, {intersectionPoint.Value.Y})");
+
+                g.FillEllipse(new Pen(Color.Green).Brush, intersectionPoint.Value.X - 6 / 2, intersectionPoint.Value.Y - 6 / 2, 6, 6);
             }
             else
             {
@@ -967,6 +996,57 @@ namespace Lab3
                 graphics.FillEllipse(pen.Brush, point.X - pointDiam / 2, point.Y - pointDiam / 2, pointDiam, pointDiam);
             }
             graphics.FillEllipse(pen.Brush, extraPoint.X - pointDiam / 2, extraPoint.Y - pointDiam / 2, pointDiam, pointDiam);
+        }
+    }
+
+    public class Matr
+    {
+        float[,] matr;
+        public Matr(int width, int height)
+        {
+            matr = new float[width, height];
+        }
+        public Matr(PointF point)
+        {
+            matr = new float[3,1];
+            matr[0,0] = point.X;
+            matr[1,0] = point.Y;
+            matr[2, 0] = 1;
+        }
+
+        public Matr(int width, int height, params float[] floats)
+        {
+            matr = new float[width, height];
+            for (int i = 0; i <  Math.Min(floats.Length,matr.Length);i++)
+            {
+                matr[i % matr.GetLength(0), i / matr.GetLength(0)] = floats[i];
+            }
+        }
+        public PointF ToPoint()
+        {
+            PointF res = new PointF();
+            res.X = matr[0, 0];
+            res.Y = matr[1, 0];
+            return res;
+        }
+
+        public static Matr operator*(Matr a, Matr b)
+        {
+            if (a.matr.GetLength(0) != b.matr.GetLength(1))
+                throw new ArgumentException("Mismatched matrix dimensions");
+            Matr res = new Matr(b.matr.GetLength(0), a.matr.GetLength(1));
+            for (int x = 0; x < res.matr.GetLength(0);x++)
+            {
+                for (int y = 0; y < res.matr.GetLength(1);y++)
+                {
+                    res.matr[x, y] = 0;
+                    for (int z = 0; z < a.matr.GetLength(0); z++)
+                    {
+                        res.matr[x, y] += a.matr[z, y] * b.matr[x, z];
+                    }
+                }
+            }
+            return res;
         }
     }
 }
